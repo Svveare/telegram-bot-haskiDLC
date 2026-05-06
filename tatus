@@ -1,0 +1,1122 @@
+[33mcommit 8999594ec10c5ce3244293b83fc497fae046ca72[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Эдуард <svveare@gmail.com>
+Date:   Wed May 6 21:07:08 2026 +0300
+
+    create a bot with basic functions
+
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mnew file mode 100644[m
+[1mindex 0000000..9204635[m
+[1m--- /dev/null[m
+[1m+++ b/.gitignore[m
+[36m@@ -0,0 +1,3 @@[m
+[32m+[m[32m.env[m
+[32m+[m[32m__pycache__/[m
+[32m+[m[32m*.pyc[m
+\ No newline at end of file[m
+[1mdiff --git a/README.md b/README.md[m
+[1mnew file mode 100644[m
+[1mindex 0000000..f6f8987[m
+[1m--- /dev/null[m
+[1m+++ b/README.md[m
+[36m@@ -0,0 +1,284 @@[m
+[32m+[m[32m# Haski Client Bot - Полная документация[m
+[32m+[m
+[32m+[m[32m## 1) Что это за проект[m
+[32m+[m
+[32m+[m[32mTelegram-бот магазина `Haski Client` на `aiogram` + `SQLite`.[m
+[32m+[m
+[32m+[m[32mВ проекте есть:[m
+[32m+[m[32m- пользовательское меню (`купить`, `профиль`, `поддержка`);[m
+[32m+[m[32m- админ-панель (`/admin`) с управлением товарами;[m
+[32m+[m[32m- рассылка всем пользователям;[m
+[32m+[m[32m- очередь обращений в поддержку с ответом/игнором;[m
+[32m+[m[32m- два способа покупки из карточки товара:[m
+[32m+[m[32m1. ссылка на FunPay;[m
+[32m+[m[32m2. ссылка на личные сообщения (`t.me/<username>`).[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 2) Быстрый ответ на ваш вопрос (FunPay + username)[m
+[32m+[m
+[32m+[m[32mГде хранится ссылка FunPay:[m
+[32m+[m[32m- файл `.env`[m
+[32m+[m[32m- переменная: `FUNPAY_URL=...`[m
+[32m+[m
+[32m+[m[32mГде указывается username для покупки через личные сообщения:[m
+[32m+[m[32m- файл `.env`[m
+[32m+[m[32m- переменная: `PM_USERNAME=...` (можно с `@`, например `@haski_support`)[m
+[32m+[m
+[32m+[m[32mКак это подключается в коде:[m
+[32m+[m[32m- `config.py` читает переменные окружения (`FUNPAY_URL`, `PM_USERNAME`);[m
+[32m+[m[32m- `keyboards/inline.py` использует их при построении кнопок покупки.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 3) Стек и зависимости[m
+[32m+[m
+[32m+[m[32m- Python 3.10+[m
+[32m+[m[32m- `aiogram` (бот + роутинг + FSM)[m
+[32m+[m[32m- `python-dotenv` (чтение `.env`)[m
+[32m+[m[32m- `sqlite3` (встроен в Python)[m
+[32m+[m
+[32m+[m[32mМинимальная установка:[m
+[32m+[m
+[32m+[m[32m```bash[m
+[32m+[m[32mpip install aiogram python-dotenv[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 4) Запуск проекта[m
+[32m+[m
+[32m+[m[32m1. Заполнить `.env`:[m
+[32m+[m
+[32m+[m[32m```env[m
+[32m+[m[32mTOKEN=...[m
+[32m+[m[32mADMINS='123456789'[m
+[32m+[m[32mDB_PATH=databases/shop_data.db[m
+[32m+[m[32mFUNPAY_URL=https://funpay.com/[m
+[32m+[m[32mPM_USERNAME=@your_username[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m2. Запустить:[m
+[32m+[m
+[32m+[m[32m```bash[m
+[32m+[m[32mpython main.py[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32mПри старте бот:[m
+[32m+[m[32m1. создает/проверяет таблицы БД;[m
+[32m+[m[32m2. регистрирует роутеры;[m
+[32m+[m[32m3. запускает polling Telegram.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 5) Структура проекта[m
+[32m+[m
+[32m+[m[32m```text[m
+[32m+[m[32mHaski_Client/[m
+[32m+[m[32m  config.py[m
+[32m+[m[32m  main.py[m
+[32m+[m[32m  .env[m
+[32m+[m[32m  databases/[m
+[32m+[m[32m    queries.py[m
+[32m+[m[32m  filters/[m
+[32m+[m[32m    admin_filter.py[m
+[32m+[m[32m  handlers/[m
+[32m+[m[32m    start.py[m
+[32m+[m[32m    menu.py[m
+[32m+[m[32m    admin.py[m
+[32m+[m[32m  keyboards/[m
+[32m+[m[32m    inline.py[m
+[32m+[m[32m    admin_kb.py[m
+[32m+[m[32m  states/[m
+[32m+[m[32m    menu_states.py[m
+[32m+[m[32m    admin_states.py[m
+[32m+[m[32m```[m
+[32m+[m
+[32m+[m[32m### Назначение файлов[m
+[32m+[m
+[32m+[m[32m- `main.py` - точка входа, запуск бота.[m
+[32m+[m[32m- `config.py` - чтение настроек из `.env`.[m
+[32m+[m[32m- `databases/queries.py` - все SQL-операции.[m
+[32m+[m[32m- `filters/admin_filter.py` - проверка, что пользователь админ.[m
+[32m+[m[32m- `handlers/start.py` - обработка `/start`.[m
+[32m+[m[32m- `handlers/menu.py` - пользовательский интерфейс.[m
+[32m+[m[32m- `handlers/admin.py` - админ-панель и сценарии админа.[m
+[32m+[m[32m- `keyboards/inline.py` - inline-кнопки пользовательской части.[m
+[32m+[m[32m- `keyboards/admin_kb.py` - inline-кнопки админ-панели.[m
+[32m+[m[32m- `states/*.py` - состояния FSM для пошаговых сценариев.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 6) Переменные окружения (`.env`)[m
+[32m+[m
+[32m+[m[32m- `TOKEN` - токен Telegram-бота.[m
+[32m+[m[32m- `ADMINS` - ID админов через запятую.[m
+[32m+[m[32m  - пример: `ADMINS='111111111,222222222'`[m
+[32m+[m[32m- `DB_PATH` - основной путь к SQLite-файлу.[m
+[32m+[m[32m- `FUNPAY_URL` - ссылка на FunPay для кнопки покупки.[m
+[32m+[m[32m- `PM_USERNAME` - username для кнопки ЛС.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 7) Подробная логика по коду[m
+[32m+[m
+[32m+[m[32m## 7.1 Старт и регистрация пользователя[m
+[32m+[m
+[32m+[m[32mФайл: `handlers/start.py`[m
+[32m+[m
+[32m+[m[32mСценарий `/start`:[m
+[32m+[m[32m1. Пользователь добавляется/обновляется в таблице `users`.[m
+[32m+[m[32m2. Отправляется главное меню с кнопками:[m
+[32m+[m[32m   - купить;[m
+[32m+[m[32m   - профиль;[m
+[32m+[m[32m   - поддержка.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 7.2 Пользовательское меню[m
+[32m+[m
+[32m+[m[32mФайл: `handlers/menu.py`[m
+[32m+[m
+[32m+[m[32m### Профиль[m
+[32m+[m[32m- Кнопка `profile` показывает:[m
+[32m+[m[32m  - username;[m
+[32m+[m[32m  - заглушки баланса/подписки.[m
+[32m+[m
+[32m+[m[32m### Каталог (`store`)[m
+[32m+[m[32m1. Загружаются активные товары из БД.[m
+[32m+[m[32m2. Показ списка кнопок вида: `Название - Цена RUB`.[m
+[32m+[m[32m3. По нажатию на товар открывается карточка:[m
+[32m+[m[32m   - название;[m
+[32m+[m[32m   - цена;[m
+[32m+[m[32m   - описание;[m
+[32m+[m[32m   - кнопки покупки.[m
+[32m+[m
+[32m+[m[32m### Покупка товара[m
+[32m+[m[32m- Кнопка `FunPay` ведет на `FUNPAY_URL`.[m
+[32m+[m[32m- Кнопка `Личные сообщения`:[m
+[32m+[m[32m  - если задан `PM_USERNAME`, открывает `https://t.me/<username>`;[m
+[32m+[m[32m  - если не задан, показывает подсказку с тем, что username не настроен.[m
+[32m+[m
+[32m+[m[32m### Поддержка[m
+[32m+[m[32m1. Пользователь нажимает `поддержка`.[m
+[32m+[m[32m2. Нажимает `написать в поддержку`.[m
+[32m+[m[32m3. Вводит текст.[m
+[32m+[m[32m4. Бот создает запись в `support_tickets` со статусом `open`.[m
+[32m+[m[32m5. Пользователь получает номер обращения.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 7.3 Админ-панель[m
+[32m+[m
+[32m+[m[32mФайл: `handlers/admin.py`[m
+[32m+[m
+[32m+[m[32mВход в панель: команда `/admin`.[m
+[32m+[m
+[32m+[m[32mПанель доступна только пользователям, прошедшим `AdminFilter`:[m
+[32m+[m[32m- фильтр в `filters/admin_filter.py`;[m
+[32m+[m[32m- сравнивает `from_user.id` со списком `ADMIN_IDS` из `.env`.[m
+[32m+[m
+[32m+[m[32m### Управление товарами[m
+[32m+[m
+[32m+[m[32m#### Добавление[m
+[32m+[m[32mFSM `AddProduct`:[m
+[32m+[m[32m1. ввести название;[m
+[32m+[m[32m2. ввести цену (только положительное целое);[m
+[32m+[m[32m3. ввести описание;[m
+[32m+[m[32m4. сохранить в таблицу `products`.[m
+[32m+[m
+[32m+[m[32m#### Редактирование[m
+[32m+[m[32mFSM `EditProduct`:[m
+[32m+[m[32m1. выбрать товар;[m
+[32m+[m[32m2. ввести новую цену;[m
+[32m+[m[32m3. обновить цену в БД.[m
+[32m+[m
+[32m+[m[32m#### Удаление[m
+[32m+[m[32m1. выбрать товар;[m
+[32m+[m[32m2. удалить запись из `products`.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m### Рассылка[m
+[32m+[m[32mFSM `BroadcastMessage`:[m
+[32m+[m[32m1. админ вводит текст;[m
+[32m+[m[32m2. бот берет `user_id` из таблицы `users`;[m
+[32m+[m[32m3. отправляет сообщение каждому;[m
+[32m+[m[32m4. возвращает статистику `доставлено/ошибок`.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m### Поддержка (очередь админа)[m
+[32m+[m[32mFSM `SupportReply`:[m
+[32m+[m[32m1. админ открывает раздел обращений;[m
+[32m+[m[32m2. листает очередь (`prev/next`);[m
+[32m+[m[32m3. может:[m
+[32m+[m[32m   - `ответить` - отправить ответ пользователю и закрыть тикет (`answered`);[m
+[32m+[m[32m   - `игнор` - пометить как `ignored`.[m
+[32m+[m
+[32m+[m[32mПосле ответа бот отправляет пользователю сообщение с его исходным текстом и ответом поддержки.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 8) База данных[m
+[32m+[m
+[32m+[m[32mФайл: `databases/queries.py`[m
+[32m+[m
+[32m+[m[32mСоздаются 3 таблицы:[m
+[32m+[m
+[32m+[m[32m### `products`[m
+[32m+[m[32m- `id` INTEGER PK[m
+[32m+[m[32m- `name` TEXT[m
+[32m+[m[32m- `price` INTEGER[m
+[32m+[m[32m- `description` TEXT[m
+[32m+[m[32m- `is_active` INTEGER DEFAULT 1[m
+[32m+[m
+[32m+[m[32m### `users`[m
+[32m+[m[32m- `user_id` INTEGER PK[m
+[32m+[m[32m- `username` TEXT[m
+[32m+[m[32m- `full_name` TEXT[m
+[32m+[m
+[32m+[m[32m### `support_tickets`[m
+[32m+[m[32m- `id` INTEGER PK[m
+[32m+[m[32m- `user_id` INTEGER[m
+[32m+[m[32m- `username` TEXT[m
+[32m+[m[32m- `full_name` TEXT[m
+[32m+[m[32m- `message` TEXT[m
+[32m+[m[32m- `status` TEXT (`open` / `answered` / `ignored`)[m
+[32m+[m[32m- `admin_response` TEXT[m
+[32m+[m[32m- `created_at` TEXT[m
+[32m+[m[32m- `answered_at` TEXT[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 9) Особенность работы с БД (OneDrive-safe fallback)[m
+[32m+[m
+[32m+[m[32mВ `queries.py` реализован выбор рабочего пути БД:[m
+[32m+[m[32m1. сначала пробуется `DB_PATH` из `.env`;[m
+[32m+[m[32m2. если путь не writable (частая проблема синхронизируемых папок), используется fallback в temp-папке системы.[m
+[32m+[m
+[32m+[m[32mЭто снижает риск падения бота из-за блокировок SQLite в cloud-sync директориях.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 10) Безопасность и корректность[m
+[32m+[m
+[32m+[m[32mЧто уже сделано правильно:[m
+[32m+[m[32m- админ-функции защищены `AdminFilter`;[m
+[32m+[m[32m- обычный пользователь не должен попасть в админ-роуты;[m
+[32m+[m[32m- SQL-запросы параметризованы (`?`), снижает риск SQL-инъекций;[m
+[32m+[m[32m- пользовательские тексты в HTML-сообщениях экранируются через `html.escape`.[m
+[32m+[m
+[32m+[m[32mЧто важно соблюдать:[m
+[32m+[m[32m- хранить `TOKEN` приватно;[m
+[32m+[m[32m- регулярно проверять `ADMINS` в `.env`;[m
+[32m+[m[32m- не отправлять в репозиторий рабочие файлы БД.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 11) Почему может быть «кракозябрами» текст[m
+[32m+[m
+[32m+[m[32mЕсли в Telegram отображается непонятный текст вида `РџС...`, это проблема кодировки файла (обычно смесь UTF-8/CP1251).[m
+[32m+[m
+[32m+[m[32mПроверить:[m
+[32m+[m[32m1. все `.py` должны быть сохранены в UTF-8;[m
+[32m+[m[32m2. редактор/IDE должен открывать и сохранять файлы в UTF-8 без BOM (или единообразно UTF-8);[m
+[32m+[m[32m3. после исправления перезапустить бота.[m
+[32m+[m
+[32m+[m
+[32m+[m[32m## 12) Полезные точки входа для доработок[m
+[32m+[m
+[32m+[m[32m- Добавить редактирование не только цены, но и описания:[m
+[32m+[m[32m  - `handlers/admin.py`[m
+[32m+[m[32m  - `states/admin_states.py`[m
+[32m+[m[32m  - `databases/queries.py`[m
+[32m+[m[32m- Добавить историю ответов поддержки:[m
+[32m+[m[32m  - `support_tickets` (уже есть `admin_response`, `answered_at`)[m
+[32m+[m[32m- Добавить логирование:[m
+[32m+[m[32m  - в `main.py` и обработчики `handlers/*`.[m
+\ No newline at end of file[m
+[1mdiff --git a/_write_probe_root.db b/_write_probe_root.db[m
+[1mnew file mode 100644[m
+[1mindex 0000000..31e7305[m
+Binary files /dev/null and b/_write_probe_root.db differ
+[1mdiff --git a/_write_probe_root.db-journal b/_write_probe_root.db-journal[m
+[1mnew file mode 100644[m
+[1mindex 0000000..ebb80eb[m
+Binary files /dev/null and b/_write_probe_root.db-journal differ
+[1mdiff --git a/config.py b/config.py[m
+[1mnew file mode 100644[m
+[1mindex 0000000..5c89122[m
+[1m--- /dev/null[m
+[1m+++ b/config.py[m
+[36m@@ -0,0 +1,23 @@[m
+[32m+[m[32mimport os[m
+[32m+[m[32mfrom dotenv import load_dotenv[m
+[32m+[m
+[32m+[m[32mload_dotenv()[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef _parse_admin_ids(raw_admins: str) -> list[int]:[m
+[32m+[m[32m    admin_ids: list[int] = [][m
+[32m+[m[32m    for value in raw_admins.split(","):[m
+[32m+[m[32m        normalized = value.strip().strip("'\"")[m
+[32m+[m[32m        if normalized:[m
+[32m+[m[32m            admin_ids.append(int(normalized))[m
+[32m+[m[32m    return admin_ids[m
+[32m+[m
+[32m+[m
+[32m+[m[32mTOKEN = os.getenv("TOKEN")[m
+[32m+[m[32mif not TOKEN:[m
+[32m+[m[32m    raise RuntimeError("TOKEN is not set")[m
+[32m+[m
+[32m+[m[32mADMIN_IDS = _parse_admin_ids(os.getenv("ADMINS", ""))[m
+[32m+[m
+[32m+[m[32mFUNPAY_URL = os.getenv("FUNPAY_URL", "https://funpay.com/")[m
+[32m+[m[32mPM_USERNAME = os.getenv("PM_USERNAME", "").strip()[m
+[1mdiff --git a/databases/_write_probe.db b/databases/_write_probe.db[m
+[1mnew file mode 100644[m
+[1mindex 0000000..31e7305[m
+Binary files /dev/null and b/databases/_write_probe.db differ
+[1mdiff --git a/databases/_write_probe.db-journal b/databases/_write_probe.db-journal[m
+[1mnew file mode 100644[m
+[1mindex 0000000..cb265c9[m
+Binary files /dev/null and b/databases/_write_probe.db-journal differ
+[1mdiff --git a/databases/new_test.db b/databases/new_test.db[m
+[1mnew file mode 100644[m
+[1mindex 0000000..31e7305[m
+Binary files /dev/null and b/databases/new_test.db differ
+[1mdiff --git a/databases/queries.py b/databases/queries.py[m
+[1mnew file mode 100644[m
+[1mindex 0000000..ea5f25b[m
+[1m--- /dev/null[m
+[1m+++ b/databases/queries.py[m
+[36m@@ -0,0 +1,250 @@[m
+[32m+[m[32mimport sqlite3[m
+[32m+[m[32mimport os[m
+[32m+[m[32mimport tempfile[m
+[32m+[m[32mfrom contextlib import closing[m
+[32m+[m[32mfrom pathlib import Path[m
+[32m+[m
+[32m+[m[32mPRIMARY_DB_PATH = Path(os.getenv("DB_PATH", "databases/shop_data.db"))[m
+[32m+[m[32mFALLBACK_DB_PATH = Path(tempfile.gettempdir()) / "haski_client_shop_data.db"[m
+[32m+[m[32mACTIVE_DB_PATH: Path | None = None[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef connect() -> sqlite3.Connection:[m
+[32m+[m[32m    global ACTIVE_DB_PATH[m
+[32m+[m
+[32m+[m[32m    if ACTIVE_DB_PATH is None:[m
+[32m+[m[32m        for candidate in (PRIMARY_DB_PATH, FALLBACK_DB_PATH):[m
+[32m+[m[32m            candidate.parent.mkdir(parents=True, exist_ok=True)[m
+[32m+[m[32m            conn = sqlite3.connect(str(candidate))[m
+[32m+[m[32m            try:[m
+[32m+[m[32m                conn.execute("BEGIN IMMEDIATE")[m
+[32m+[m[32m                conn.execute("ROLLBACK")[m
+[32m+[m[32m                ACTIVE_DB_PATH = candidate[m
+[32m+[m[32m                conn.close()[m
+[32m+[m[32m                break[m
+[32m+[m[32m            except sqlite3.OperationalError:[m
+[32m+[m[32m                conn.close()[m
+[32m+[m[32m        else:[m
+[32m+[m[32m            raise sqlite3.OperationalError("Unable to open writable database path")[m
+[32m+[m
+[32m+[m[32m    conn = sqlite3.connect(str(ACTIVE_DB_PATH))[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        conn.execute("PRAGMA journal_mode=MEMORY")[m
+[32m+[m[32m        conn.execute("PRAGMA synchronous=OFF")[m
+[32m+[m[32m    except sqlite3.OperationalError:[m
+[32m+[m[32m        # Some cloud-sync folders may block PRAGMA changes on a locked DB file.[m
+[32m+[m[32m        # In that case we continue with default SQLite settings.[m
+[32m+[m[32m        pass[m
+[32m+[m[32m    return conn[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef create_tables() -> None:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            """[m
+[32m+[m[32m            CREATE TABLE IF NOT EXISTS products ([m
+[32m+[m[32m                id INTEGER PRIMARY KEY AUTOINCREMENT,[m
+[32m+[m[32m                name TEXT NOT NULL,[m
+[32m+[m[32m                price INTEGER NOT NULL,[m
+[32m+[m[32m                description TEXT NOT NULL,[m
+[32m+[m[32m                is_active INTEGER DEFAULT 1[m
+[32m+[m[32m            )[m
+[32m+[m[32m            """[m
+[32m+[m[32m        )[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            """[m
+[32m+[m[32m            CREATE TABLE IF NOT EXISTS users ([m
+[32m+[m[32m                user_id INTEGER PRIMARY KEY,[m
+[32m+[m[32m                username TEXT,[m
+[32m+[m[32m                full_name TEXT[m
+[32m+[m[32m            )[m
+[32m+[m[32m            """[m
+[32m+[m[32m        )[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            """[m
+[32m+[m[32m            CREATE TABLE IF NOT EXISTS support_tickets ([m
+[32m+[m[32m                id INTEGER PRIMARY KEY AUTOINCREMENT,[m
+[32m+[m[32m                user_id INTEGER NOT NULL,[m
+[32m+[m[32m                username TEXT,[m
+[32m+[m[32m                full_name TEXT,[m
+[32m+[m[32m                message TEXT NOT NULL,[m
+[32m+[m[32m                status TEXT NOT NULL DEFAULT 'open',[m
+[32m+[m[32m                admin_response TEXT,[m
+[32m+[m[32m                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,[m
+[32m+[m[32m                answered_at TEXT[m
+[32m+[m[32m            )[m
+[32m+[m[32m            """[m
+[32m+[m[32m        )[m
+[32m+[m[32m        conn.commit()[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef add_user(user_id: int, username: str | None, full_name: str | None) -> None:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            """[m
+[32m+[m[32m            INSERT INTO users (user_id, username, full_name)[m
+[32m+[m[32m            VALUES (?, ?, ?)[m
+[32m+[m[32m            ON CONFLICT(user_id) DO UPDATE SET[m
+[32m+[m[32m                username = excluded.username,[m
+[32m+[m[32m                full_name = excluded.full_name[m
+[32m+[m[32m            """,[m
+[32m+[m[32m            (user_id, username, full_name),[m
+[32m+[m[32m        )[m
+[32m+[m[32m        conn.commit()[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef get_all_user_ids() -> list[int]:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute("SELECT user_id FROM users")[m
+[32m+[m[32m        rows = cursor.fetchall()[m
+[32m+[m[32m    return [row[0] for row in rows][m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef add_product(name: str, price: int, description: str) -> None:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            "INSERT INTO products (name, price, description) VALUES (?, ?, ?)",[m
+[32m+[m[32m            (name, price, description),[m
+[32m+[m[32m        )[m
+[32m+[m[32m        conn.commit()[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef get_products() -> list[tuple[int, str]]:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            "SELECT id, name FROM products WHERE is_active=1 ORDER BY id DESC"[m
+[32m+[m[32m        )[m
+[32m+[m[32m        products = cursor.fetchall()[m
+[32m+[m[32m    return products[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef get_products_for_user() -> list[tuple[int, str, int]]:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            "SELECT id, name, price FROM products WHERE is_active=1 ORDER BY id DESC"[m
+[32m+[m[32m        )[m
+[32m+[m[32m        products = cursor.fetchall()[m
+[32m+[m[32m    return products[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef get_product(product_id: int) -> tuple[str, int, str] | None:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            """[m
+[32m+[m[32m            SELECT name, price, description[m
+[32m+[m[32m            FROM products[m
+[32m+[m[32m            WHERE id=? AND is_active=1[m
+[32m+[m[32m            """,[m
+[32m+[m[32m            (product_id,),[m
+[32m+[m[32m        )[m
+[32m+[m[32m        product = cursor.fetchone()[m
+[32m+[m[32m    return product[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef delete_product(product_id: int) -> bool:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute("DELETE FROM products WHERE id=?", (product_id,))[m
+[32m+[m[32m        conn.commit()[m
+[32m+[m[32m        return cursor.rowcount > 0[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef update_product_price(product_id: int, price: int) -> bool:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            "UPDATE products SET price=? WHERE id=?",[m
+[32m+[m[32m            (price, product_id),[m
+[32m+[m[32m        )[m
+[32m+[m[32m        conn.commit()[m
+[32m+[m[32m        return cursor.rowcount > 0[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef add_support_ticket([m
+[32m+[m[32m    user_id: int,[m
+[32m+[m[32m    username: str | None,[m
+[32m+[m[32m    full_name: str | None,[m
+[32m+[m[32m    message: str,[m
+[32m+[m[32m) -> int:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            """[m
+[32m+[m[32m            INSERT INTO support_tickets (user_id, username, full_name, message)[m
+[32m+[m[32m            VALUES (?, ?, ?, ?)[m
+[32m+[m[32m            """,[m
+[32m+[m[32m            (user_id, username, full_name, message),[m
+[32m+[m[32m        )[m
+[32m+[m[32m        conn.commit()[m
+[32m+[m[32m        return int(cursor.lastrowid)[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef get_open_support_ticket_ids() -> list[int]:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            """[m
+[32m+[m[32m            SELECT id[m
+[32m+[m[32m            FROM support_tickets[m
+[32m+[m[32m            WHERE status='open'[m
+[32m+[m[32m            ORDER BY id ASC[m
+[32m+[m[32m            """[m
+[32m+[m[32m        )[m
+[32m+[m[32m        rows = cursor.fetchall()[m
+[32m+[m[32m    return [row[0] for row in rows][m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef get_support_ticket([m
+[32m+[m[32m    ticket_id: int,[m
+[32m+[m[32m) -> tuple[int, int, str | None, str | None, str, str, str] | None:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            """[m
+[32m+[m[32m            SELECT id, user_id, username, full_name, message, status, created_at[m
+[32m+[m[32m            FROM support_tickets[m
+[32m+[m[32m            WHERE id=?[m
+[32m+[m[32m            """,[m
+[32m+[m[32m            (ticket_id,),[m
+[32m+[m[32m        )[m
+[32m+[m[32m        row = cursor.fetchone()[m
+[32m+[m[32m    return row[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef ignore_support_ticket(ticket_id: int) -> bool:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            """[m
+[32m+[m[32m            UPDATE support_tickets[m
+[32m+[m[32m            SET status='ignored'[m
+[32m+[m[32m            WHERE id=? AND status='open'[m
+[32m+[m[32m            """,[m
+[32m+[m[32m            (ticket_id,),[m
+[32m+[m[32m        )[m
+[32m+[m[32m        conn.commit()[m
+[32m+[m[32m        return cursor.rowcount > 0[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef answer_support_ticket(ticket_id: int, admin_response: str) -> bool:[m
+[32m+[m[32m    with closing(connect()) as conn:[m
+[32m+[m[32m        cursor = conn.cursor()[m
+[32m+[m[32m        cursor.execute([m
+[32m+[m[32m            """[m
+[32m+[m[32m            UPDATE support_tickets[m
+[32m+[m[32m            SET status='answered',[m
+[32m+[m[32m                admin_response=?,[m
+[32m+[m[32m                answered_at=CURRENT_TIMESTAMP[m
+[32m+[m[32m            WHERE id=? AND status='open'[m
+[32m+[m[32m            """,[m
+[32m+[m[32m            (admin_response, ticket_id),[m
+[32m+[m[32m        )[m
+[32m+[m[32m        conn.commit()[m
+[32m+[m[32m        return cursor.rowcount > 0[m
+[1mdiff --git a/databases/shop.db b/databases/shop.db[m
+[1mnew file mode 100644[m
+[1mindex 0000000..e69de29[m
+[1mdiff --git a/databases/shop.db-journal b/databases/shop.db-journal[m
+[1mnew file mode 100644[m
+[1mindex 0000000..f254b9f[m
+Binary files /dev/null and b/databases/shop.db-journal differ
+[1mdiff --git a/databases/shop_data.db b/databases/shop_data.db[m
+[1mnew file mode 100644[m
+[1mindex 0000000..0fec89f[m
+Binary files /dev/null and b/databases/shop_data.db differ
+[1mdiff --git a/filters/admin_filter.py b/filters/admin_filter.py[m
+[1mnew file mode 100644[m
+[1mindex 0000000..d6d0910[m
+[1m--- /dev/null[m
+[1m+++ b/filters/admin_filter.py[m
+[36m@@ -0,0 +1,10 @@[m
+[32m+[m[32mfrom aiogram.filters import BaseFilter[m
+[32m+[m[32mfrom aiogram.types import Message, CallbackQuery[m
+[32m+[m
+[32m+[m[32mfrom config import ADMIN_IDS[m
+[32m+[m
+[32m+[m
+[32m+[m[32mclass AdminFilter(BaseFilter):[m
+[32m+[m[32m    async def __call__(self, event: Message | CallbackQuery) -> bool:[m
+[32m+[m[32m        user = getattr(event, "from_user", None)[m
+[32m+[m[32m        return bool(user and user.id in ADMIN_IDS)[m
+[1mdiff --git a/handlers/admin.py b/handlers/admin.py[m
+[1mnew file mode 100644[m
+[1mindex 0000000..bd01750[m
+[1m--- /dev/null[m
+[1m+++ b/handlers/admin.py[m
+[36m@@ -0,0 +1,516 @@[m
+[32m+[m[32mimport html[m
+[32m+[m
+[32m+[m[32mfrom aiogram import Router, F[m
+[32m+[m[32mfrom aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton[m
+[32m+[m[32mfrom aiogram.filters import Command[m
+[32m+[m[32mfrom aiogram.fsm.context import FSMContext[m
+[32m+[m
+[32m+[m[32mfrom filters.admin_filter import AdminFilter[m
+[32m+[m[32mfrom keyboards.admin_kb import admin_kb, support_admin_kb, products_admin_kb[m
+[32m+[m[32mfrom keyboards.inline import inline_kb_start[m
+[32m+[m[32mfrom databases.queries import ([m
+[32m+[m[32m    add_product,[m
+[32m+[m[32m    get_products,[m
+[32m+[m[32m    get_product,[m
+[32m+[m[32m    delete_product,[m
+[32m+[m[32m    update_product_price,[m
+[32m+[m[32m    get_all_user_ids,[m
+[32m+[m[32m    get_open_support_ticket_ids,[m
+[32m+[m[32m    get_support_ticket,[m
+[32m+[m[32m    ignore_support_ticket,[m
+[32m+[m[32m    answer_support_ticket,[m
+[32m+[m[32m)[m
+[32m+[m[32mfrom states.admin_states import AddProduct, EditProduct, BroadcastMessage, SupportReply[m
+[32m+[m
+[32m+[m[32madmin_router = Router(name="admin")[m
+[32m+[m[32madmin_router.message.filter(AdminFilter())[m
+[32m+[m[32madmin_router.callback_query.filter(AdminFilter())[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef _build_products_manage_kb(action_prefix: str, products: list[tuple[int, str]]) -> InlineKeyboardMarkup:[m
+[32m+[m[32m    keyboard = [[m
+[32m+[m[32m        [InlineKeyboardButton(text=name, callback_data=f"{action_prefix}_{product_id}")][m
+[32m+[m[32m        for product_id, name in products[m
+[32m+[m[32m    ][m
+[32m+[m[32m    keyboard.append([InlineKeyboardButton(text="🔙 Назад", callback_data="products_admin")])[m
+[32m+[m[32m    return InlineKeyboardMarkup(inline_keyboard=keyboard)[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef _build_support_ticket_kb(ticket_id: int, has_prev: bool, has_next: bool) -> InlineKeyboardMarkup:[m
+[32m+[m[32m    nav_row = [[m
+[32m+[m[32m        InlineKeyboardButton([m
+[32m+[m[32m            text="⬅️",[m
+[32m+[m[32m            callback_data=f"support_prev_{ticket_id}" if has_prev else "support_noop",[m
+[32m+[m[32m        ),[m
+[32m+[m[32m        InlineKeyboardButton([m
+[32m+[m[32m            text="➡️",[m
+[32m+[m[32m            callback_data=f"support_next_{ticket_id}" if has_next else "support_noop",[m
+[32m+[m[32m        ),[m
+[32m+[m[32m    ][m
+[32m+[m[32m    action_row = [[m
+[32m+[m[32m        InlineKeyboardButton(text="✉️ Ответить", callback_data=f"support_reply_{ticket_id}"),[m
+[32m+[m[32m        InlineKeyboardButton(text="🗑 Игнор", callback_data=f"support_ignore_{ticket_id}"),[m
+[32m+[m[32m    ][m
+[32m+[m[32m    back_row = [InlineKeyboardButton(text="🔙 Назад", callback_data="back_to_admin")][m
+[32m+[m[32m    return InlineKeyboardMarkup(inline_keyboard=[nav_row, action_row, back_row])[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef _parse_positive_int(value: str) -> int | None:[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        parsed = int(value)[m
+[32m+[m[32m    except (TypeError, ValueError):[m
+[32m+[m[32m        return None[m
+[32m+[m[32m    if parsed <= 0:[m
+[32m+[m[32m        return None[m
+[32m+[m[32m    return parsed[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef _message_text(message: Message) -> str:[m
+[32m+[m[32m    return (message.text or "").strip()[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef _support_queue_position(ticket_id: int, open_ids: list[int]) -> tuple[int, int]:[m
+[32m+[m[32m    if not open_ids:[m
+[32m+[m[32m        return 0, 0[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        index = open_ids.index(ticket_id)[m
+[32m+[m[32m    except ValueError:[m
+[32m+[m[32m        index = 0[m
+[32m+[m[32m    return index + 1, len(open_ids)[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef _format_support_ticket(ticket: tuple[int, int, str | None, str | None, str, str, str], position: int, total: int) -> str:[m
+[32m+[m[32m    ticket_id, user_id, username, full_name, user_message, _status, created_at = ticket[m
+[32m+[m[32m    title = full_name or "Без имени"[m
+[32m+[m[32m    username_line = f"@{username}" if username else "не указан"[m
+[32m+[m[32m    return ([m
+[32m+[m[32m        f"🎧 Обращение {position}/{total}\n\n"[m
+[32m+[m[32m        f"ID: #{ticket_id}\n"[m
+[32m+[m[32m        f"Пользователь: {html.escape(title)}\n"[m
+[32m+[m[32m        f"Username: {html.escape(username_line)}\n"[m
+[32m+[m[32m        f"User ID: <code>{user_id}</code>\n"[m
+[32m+[m[32m        f"Создано: {created_at}\n\n"[m
+[32m+[m[32m        f"Сообщение:\n{html.escape(user_message)}"[m
+[32m+[m[32m    )[m
+[32m+[m
+[32m+[m
+[32m+[m[32mdef _select_neighbor_ticket_id(current_id: int, direction: int) -> int | None:[m
+[32m+[m[32m    open_ids = get_open_support_ticket_ids()[m
+[32m+[m[32m    if not open_ids:[m
+[32m+[m[32m        return None[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        index = open_ids.index(current_id)[m
+[32m+[m[32m    except ValueError:[m
+[32m+[m[32m        return open_ids[0][m
+[32m+[m
+[32m+[m[32m    new_index = index + direction[m
+[32m+[m[32m    if new_index < 0:[m
+[32m+[m[32m        new_index = 0[m
+[32m+[m[32m    if new_index >= len(open_ids):[m
+[32m+[m[32m        new_index = len(open_ids) - 1[m
+[32m+[m[32m    return open_ids[new_index][m
+[32m+[m
+[32m+[m
+[32m+[m[32masync def _show_support_ticket(callback: CallbackQuery, ticket_id: int) -> None:[m
+[32m+[m[32m    open_ids = get_open_support_ticket_ids()[m
+[32m+[m[32m    if not open_ids:[m
+[32m+[m[32m        await callback.message.edit_text([m
+[32m+[m[32m            "🎧 В очереди поддержки нет открытых обращений.",[m
+[32m+[m[32m            reply_markup=support_admin_kb,[m
+[32m+[m[32m        )[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    ticket = get_support_ticket(ticket_id)[m
+[32m+[m[32m    if not ticket or ticket[5] != "open":[m
+[32m+[m[32m        actual_id = open_ids[0][m
+[32m+[m[32m        ticket = get_support_ticket(actual_id)[m
+[32m+[m[32m        ticket_id = actual_id[m
+[32m+[m
+[32m+[m[32m    if not ticket:[m
+[32m+[m[32m        await callback.message.edit_text([m
+[32m+[m[32m            "🎧 В очереди поддержки нет открытых обращений.",[m
+[32m+[m[32m            reply_markup=support_admin_kb,[m
+[32m+[m[32m        )[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    position, total = _support_queue_position(ticket_id, open_ids)[m
+[32m+[m[32m    has_prev = position > 1[m
+[32m+[m[32m    has_next = position < total[m
+[32m+[m[32m    await callback.message.edit_text([m
+[32m+[m[32m        _format_support_ticket(ticket, position, total),[m
+[32m+[m[32m        parse_mode="HTML",[m
+[32m+[m[32m        reply_markup=_build_support_ticket_kb(ticket_id, has_prev, has_next),[m
+[32m+[m[32m    )[m
+[32m+[m
+[32m+[m
+[32m+[m[32masync def _send_next_support_ticket_to_admin(message: Message) -> None:[m
+[32m+[m[32m    open_ids = get_open_support_ticket_ids()[m
+[32m+[m[32m    if not open_ids:[m
+[32m+[m[32m        await message.answer("🎧 В очереди поддержки нет открытых обращений.")[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    ticket = get_support_ticket(open_ids[0])[m
+[32m+[m[32m    if not ticket:[m
+[32m+[m[32m        await message.answer("🎧 В очереди поддержки нет открытых обращений.")[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    position, total = _support_queue_position(open_ids[0], open_ids)[m
+[32m+[m[32m    has_prev = position > 1[m
+[32m+[m[32m    has_next = position < total[m
+[32m+[m[32m    await message.answer([m
+[32m+[m[32m        _format_support_ticket(ticket, position, total),[m
+[32m+[m[32m        parse_mode="HTML",[m
+[32m+[m[32m        reply_markup=_build_support_ticket_kb(open_ids[0], has_prev, has_next),[m
+[32m+[m[32m    )[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.message(Command("admin"))[m
+[32m+[m[32masync def show_admin_panel(message: Message):[m
+[32m+[m[32m    await message.answer([m
+[32m+[m[32m        "🔐 Админ-панель\n\nВыберите действие:",[m
+[32m+[m[32m        reply_markup=admin_kb,[m
+[32m+[m[32m    )[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data == "back_to_admin")[m
+[32m+[m[32masync def back_to_admin(callback: CallbackQuery, state: FSMContext):[m
+[32m+[m[32m    await state.clear()[m
+[32m+[m[32m    await callback.message.edit_text([m
+[32m+[m[32m        "🔐 Админ-панель\n\nВыберите действие:",[m
+[32m+[m[32m        reply_markup=admin_kb,[m
+[32m+[m[32m    )[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data == "close_admin")[m
+[32m+[m[32masync def close_admin_panel(callback: CallbackQuery, state: FSMContext):[m
+[32m+[m[32m    await state.clear()[m
+[32m+[m[32m    await callback.message.edit_text([m
+[32m+[m[32m        "👋 Приветствуем!\n\nВыберите действие:",[m
+[32m+[m[32m        reply_markup=inline_kb_start,[m
+[32m+[m[32m    )[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data == "support_noop")[m
+[32m+[m[32masync def support_noop(callback: CallbackQuery):[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data == "support_admin")[m
+[32m+[m[32masync def show_support_admin(callback: CallbackQuery, state: FSMContext):[m
+[32m+[m[32m    await state.clear()[m
+[32m+[m[32m    open_ids = get_open_support_ticket_ids()[m
+[32m+[m[32m    if not open_ids:[m
+[32m+[m[32m        await callback.message.edit_text([m
+[32m+[m[32m            "🎧 В очереди поддержки нет открытых обращений.",[m
+[32m+[m[32m            reply_markup=support_admin_kb,[m
+[32m+[m[32m        )[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    await _show_support_ticket(callback, open_ids[0])[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data.startswith("support_prev_"))[m
+[32m+[m[32masync def support_prev(callback: CallbackQuery):[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        ticket_id = int(callback.data.split("_", maxsplit=2)[2])[m
+[32m+[m[32m    except (IndexError, ValueError):[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    next_id = _select_neighbor_ticket_id(ticket_id, direction=-1)[m
+[32m+[m[32m    if next_id is None:[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    await _show_support_ticket(callback, next_id)[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data.startswith("support_next_"))[m
+[32m+[m[32masync def support_next(callback: CallbackQuery):[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        ticket_id = int(callback.data.split("_", maxsplit=2)[2])[m
+[32m+[m[32m    except (IndexError, ValueError):[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    next_id = _select_neighbor_ticket_id(ticket_id, direction=1)[m
+[32m+[m[32m    if next_id is None:[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    await _show_support_ticket(callback, next_id)[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data.startswith("support_ignore_"))[m
+[32m+[m[32masync def support_ignore(callback: CallbackQuery):[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        ticket_id = int(callback.data.split("_", maxsplit=2)[2])[m
+[32m+[m[32m    except (IndexError, ValueError):[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    open_ids_before = get_open_support_ticket_ids()[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        old_index = open_ids_before.index(ticket_id)[m
+[32m+[m[32m    except ValueError:[m
+[32m+[m[32m        old_index = 0[m
+[32m+[m
+[32m+[m[32m    ignore_support_ticket(ticket_id)[m
+[32m+[m[32m    open_ids_after = get_open_support_ticket_ids()[m
+[32m+[m[32m    if not open_ids_after:[m
+[32m+[m[32m        await callback.message.edit_text([m
+[32m+[m[32m            "🎧 В очереди поддержки нет открытых обращений.",[m
+[32m+[m[32m            reply_markup=support_admin_kb,[m
+[32m+[m[32m        )[m
+[32m+[m[32m        await callback.answer("Обращение проигнорировано")[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    next_index = min(old_index, len(open_ids_after) - 1)[m
+[32m+[m[32m    await _show_support_ticket(callback, open_ids_after[next_index])[m
+[32m+[m[32m    await callback.answer("Обращение проигнорировано")[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data.startswith("support_reply_"))[m
+[32m+[m[32masync def support_reply_start(callback: CallbackQuery, state: FSMContext):[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        ticket_id = int(callback.data.split("_", maxsplit=2)[2])[m
+[32m+[m[32m    except (IndexError, ValueError):[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    ticket = get_support_ticket(ticket_id)[m
+[32m+[m[32m    if not ticket or ticket[5] != "open":[m
+[32m+[m[32m        await callback.answer("Обращение уже обработано", show_alert=True)[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    await state.update_data(ticket_id=ticket_id)[m
+[32m+[m[32m    await state.set_state(SupportReply.text)[m
+[32m+[m[32m    await callback.message.answer([m
+[32m+[m[32m        f"Введите ответ для обращения #{ticket_id}:"[m
+[32m+[m[32m    )[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.message(SupportReply.text)[m
+[32m+[m[32masync def support_reply_send(message: Message, state: FSMContext):[m
+[32m+[m[32m    reply_text = _message_text(message)[m
+[32m+[m[32m    if not reply_text:[m
+[32m+[m[32m        await message.answer("Введите текст ответа:")[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    data = await state.get_data()[m
+[32m+[m[32m    ticket_id = data.get("ticket_id")[m
+[32m+[m[32m    if not ticket_id:[m
+[32m+[m[32m        await message.answer("Не удалось определить обращение.")[m
+[32m+[m[32m        await state.clear()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    ticket = get_support_ticket(ticket_id)[m
+[32m+[m[32m    if not ticket or ticket[5] != "open":[m
+[32m+[m[32m        await message.answer("Это обращение уже обработано.")[m
+[32m+[m[32m        await state.clear()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    _id, user_id, _username, _full_name, user_message, _status, _created_at = ticket[m
+[32m+[m[32m    text_for_user = ([m
+[32m+[m[32m        "Ответ поддержки Haski Client на ваше сообщение:\n\n"[m
+[32m+[m[32m        f"{user_message}\n\n"[m
+[32m+[m[32m        f"{reply_text}"[m
+[32m+[m[32m    )[m
+[32m+[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        await message.bot.send_message(user_id, text_for_user)[m
+[32m+[m[32m    except Exception:[m
+[32m+[m[32m        await message.answer([m
+[32m+[m[32m            "Не удалось отправить ответ пользователю. Обращение осталось в очереди."[m
+[32m+[m[32m        )[m
+[32m+[m[32m        await state.clear()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    answer_support_ticket(ticket_id, reply_text)[m
+[32m+[m[32m    await message.answer(f"✅ Ответ отправлен по обращению #{ticket_id}.")[m
+[32m+[m[32m    await state.clear()[m
+[32m+[m[32m    await _send_next_support_ticket_to_admin(message)[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data == "products_admin")[m
+[32m+[m[32masync def show_products_admin(callback: CallbackQuery):[m
+[32m+[m[32m    await callback.message.edit_text([m
+[32m+[m[32m        "🧺 Управление товарами",[m
+[32m+[m[32m        reply_markup=products_admin_kb,[m
+[32m+[m[32m    )[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data == "add_product")[m
+[32m+[m[32masync def add_product_start(callback: CallbackQuery, state: FSMContext):[m
+[32m+[m[32m    await state.set_state(AddProduct.name)[m
+[32m+[m[32m    await callback.message.answer("Введите название товара:")[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.message(AddProduct.name)[m
+[32m+[m[32masync def add_product_name(message: Message, state: FSMContext):[m
+[32m+[m[32m    name = _message_text(message)[m
+[32m+[m[32m    if not name:[m
+[32m+[m[32m        await message.answer("Введите название товара:")[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    await state.update_data(name=name)[m
+[32m+[m[32m    await state.set_state(AddProduct.price)[m
+[32m+[m[32m    await message.answer("Введите цену:")[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.message(AddProduct.price)[m
+[32m+[m[32masync def add_product_price(message: Message, state: FSMContext):[m
+[32m+[m[32m    price = _parse_positive_int(_message_text(message))[m
+[32m+[m[32m    if price is None:[m
+[32m+[m[32m        await message.answer("Введите цену:")[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    await state.update_data(price=price)[m
+[32m+[m[32m    await state.set_state(AddProduct.description)[m
+[32m+[m[32m    await message.answer("Введите описание:")[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.message(AddProduct.description)[m
+[32m+[m[32masync def add_product_description(message: Message, state: FSMContext):[m
+[32m+[m[32m    description = _message_text(message)[m
+[32m+[m[32m    if not description:[m
+[32m+[m[32m        await message.answer("Введите описание:")[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    data = await state.get_data()[m
+[32m+[m[32m    add_product([m
+[32m+[m[32m        name=data["name"],[m
+[32m+[m[32m        price=data["price"],[m
+[32m+[m[32m        description=description,[m
+[32m+[m[32m    )[m
+[32m+[m[32m    await message.answer("✅ Товар добавлен")[m
+[32m+[m[32m    await state.clear()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data == "delete_product")[m
+[32m+[m[32masync def delete_product_menu(callback: CallbackQuery):[m
+[32m+[m[32m    products = get_products()[m
+[32m+[m[32m    if not products:[m
+[32m+[m[32m        await callback.message.edit_text([m
+[32m+[m[32m            "Список товаров пуст.",[m
+[32m+[m[32m            reply_markup=products_admin_kb,[m
+[32m+[m[32m        )[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    await callback.message.edit_text([m
+[32m+[m[32m        "Выберите товар для удаления:",[m
+[32m+[m[32m        reply_markup=_build_products_manage_kb("delete_item", products),[m
+[32m+[m[32m    )[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data.startswith("delete_item_"))[m
+[32m+[m[32masync def delete_product_confirm(callback: CallbackQuery):[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        product_id = int(callback.data.split("_", maxsplit=2)[2])[m
+[32m+[m[32m    except (IndexError, ValueError):[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    if not get_product(product_id):[m
+[32m+[m[32m        await callback.answer("Товар не найден", show_alert=True)[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    delete_product(product_id)[m
+[32m+[m[32m    await callback.answer("Удалено ✅")[m
+[32m+[m[32m    await callback.message.edit_text("Товар удалён", reply_markup=products_admin_kb)[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data == "edit_product")[m
+[32m+[m[32masync def edit_product_menu(callback: CallbackQuery):[m
+[32m+[m[32m    products = get_products()[m
+[32m+[m[32m    if not products:[m
+[32m+[m[32m        await callback.message.edit_text([m
+[32m+[m[32m            "Список товаров пуст.",[m
+[32m+[m[32m            reply_markup=products_admin_kb,[m
+[32m+[m[32m        )[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    await callback.message.edit_text([m
+[32m+[m[32m        "Выберите товар:",[m
+[32m+[m[32m        reply_markup=_build_products_manage_kb("edit_item", products),[m
+[32m+[m[32m    )[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.callback_query(F.data.startswith("edit_item_"))[m
+[32m+[m[32masync def edit_product_start(callback: CallbackQuery, state: FSMContext):[m
+[32m+[m[32m    try:[m
+[32m+[m[32m        product_id = int(callback.data.split("_", maxsplit=2)[2])[m
+[32m+[m[32m    except (IndexError, ValueError):[m
+[32m+[m[32m        await callback.answer()[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    if not get_product(product_id):[m
+[32m+[m[32m        await callback.answer("Товар не найден", show_alert=True)[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    await state.update_data(product_id=product_id)[m
+[32m+[m[32m    await state.set_state(EditProduct.new_price)[m
+[32m+[m[32m    await callback.message.answer("Введите новую цену:")[m
+[32m+[m[32m    await callback.answer()[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin_router.message(EditProduct.new_price)[m
+[32m+[m[32masync def edit_product_price(message: Message, state: FSMContext):[m
+[32m+[m[32m    new_price = _parse_positive_int(_message_text(message))[m
+[32m+[m[32m    if new_price is None:[m
+[32m+[m[32m        await message.answer("Введите новую цену:")[m
+[32m+[m[32m        return[m
+[32m+[m
+[32m+[m[32m    data = await state.get_data()
