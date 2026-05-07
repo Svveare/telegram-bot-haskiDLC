@@ -7,7 +7,7 @@ from pathlib import Path
 PRIMARY_DB_PATH = Path(os.getenv("DB_PATH", "databases/shop_data.db"))
 FALLBACK_DB_PATH = Path(tempfile.gettempdir()) / "haski_client_shop_data.db"
 ACTIVE_DB_PATH: Path | None = None
-
+_products_cache = None
 
 def connect() -> sqlite3.Connection:
     global ACTIVE_DB_PATH
@@ -29,7 +29,7 @@ def connect() -> sqlite3.Connection:
 
     conn = sqlite3.connect(str(ACTIVE_DB_PATH))
     try:
-        conn.execute("PRAGMA journal_mode=MEMORY")
+        conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA synchronous=OFF")
     except sqlite3.OperationalError:
         # Some cloud-sync folders may block PRAGMA changes on a locked DB file.
@@ -104,6 +104,8 @@ def get_all_user_ids() -> list[int]:
 
 
 def add_product(name: str, price: int, description: str) -> None:
+    global _products_cache
+    _products_cache = None
     with closing(connect()) as conn:
         cursor = conn.cursor()
         cursor.execute(
@@ -124,13 +126,19 @@ def get_products() -> list[tuple[int, str]]:
 
 
 def get_products_for_user() -> list[tuple[int, str, int]]:
+    global _products_cache
+
+    if _products_cache is not None:
+        return _products_cache
+
     with closing(connect()) as conn:
         cursor = conn.cursor()
         cursor.execute(
             "SELECT id, name, price FROM products WHERE is_active=1 ORDER BY id DESC"
         )
-        products = cursor.fetchall()
-    return products
+        _products_cache = cursor.fetchall()
+
+    return _products_cache
 
 
 def get_product(product_id: int) -> tuple[str, int, str] | None:
@@ -149,6 +157,8 @@ def get_product(product_id: int) -> tuple[str, int, str] | None:
 
 
 def delete_product(product_id: int) -> bool:
+    global _products_cache
+    _products_cache = None
     with closing(connect()) as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM products WHERE id=?", (product_id,))
@@ -157,6 +167,8 @@ def delete_product(product_id: int) -> bool:
 
 
 def update_product_price(product_id: int, price: int) -> bool:
+    global _products_cache
+    _products_cache = None
     with closing(connect()) as conn:
         cursor = conn.cursor()
         cursor.execute(

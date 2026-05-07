@@ -149,6 +149,9 @@ async def start_support_request(callback: CallbackQuery, state: FSMContext):
 async def submit_support_request(message: Message, state: FSMContext):
     _track_user_from_message(message)
     text = (message.text or "").strip()
+    if len(text) > 1000:
+      await message.answer("❌ Сообщение слишком длинное")
+      return
     if not text:
         await message.answer("Введите сообщение для поддержки:")
         return
